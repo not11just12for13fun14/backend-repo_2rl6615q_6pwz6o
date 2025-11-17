@@ -1,48 +1,26 @@
 """
-Database Schemas
+Database Schemas for Affiliate Site
 
-Define your MongoDB collection schemas here using Pydantic models.
-These schemas are used for data validation in your application.
-
-Each Pydantic model represents a collection in your database.
-Model name is converted to lowercase for the collection name:
-- User -> "user" collection
-- Product -> "product" collection
-- BlogPost -> "blogs" collection
+Each Pydantic model corresponds to a MongoDB collection. The collection name is the lowercase class name.
 """
+from pydantic import BaseModel, Field, HttpUrl
+from typing import Optional, List
 
-from pydantic import BaseModel, Field
-from typing import Optional
+class Category(BaseModel):
+    name: str = Field(..., description="Category name, e.g., 'Beginner Guitars'")
+    slug: str = Field(..., description="URL-friendly slug, unique per category")
 
-# Example schemas (replace with your own):
-
-class User(BaseModel):
-    """
-    Users collection schema
-    Collection name: "user" (lowercase of class name)
-    """
-    name: str = Field(..., description="Full name")
-    email: str = Field(..., description="Email address")
-    address: str = Field(..., description="Address")
-    age: Optional[int] = Field(None, ge=0, le=120, description="Age in years")
-    is_active: bool = Field(True, description="Whether user is active")
-
-class Product(BaseModel):
-    """
-    Products collection schema
-    Collection name: "product" (lowercase of class name)
-    """
+class AffiliateProduct(BaseModel):
     title: str = Field(..., description="Product title")
-    description: Optional[str] = Field(None, description="Product description")
-    price: float = Field(..., ge=0, description="Price in dollars")
-    category: str = Field(..., description="Product category")
-    in_stock: bool = Field(True, description="Whether product is in stock")
+    description: Optional[str] = Field(None, description="Short description")
+    price: Optional[float] = Field(None, ge=0, description="Price (optional)")
+    category: str = Field(..., description="Category slug this product belongs to")
+    affiliate_url: HttpUrl = Field(..., description="Affiliate tracking link")
+    image_url: Optional[HttpUrl] = Field(None, description="Product image URL")
+    tags: Optional[List[str]] = Field(default_factory=list, description="Searchable tags")
+    featured: bool = Field(False, description="Whether to highlight on homepage")
+    rating: Optional[float] = Field(None, ge=0, le=5, description="Average rating 0-5")
 
-# Add your own schemas here:
-# --------------------------------------------------
-
-# Note: The Flames database viewer will automatically:
-# 1. Read these schemas from GET /schema endpoint
-# 2. Use them for document validation when creating/editing
-# 3. Handle all database operations (CRUD) directly
-# 4. You don't need to create any database endpoints!
+class Click(BaseModel):
+    product_id: str = Field(..., description="ID string of the clicked product")
+    source: Optional[str] = Field(None, description="Where the click originated (e.g., 'hero', 'grid')")
